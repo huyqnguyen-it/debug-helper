@@ -46,6 +46,23 @@ async function send(msg) {
   return chrome.runtime.sendMessage(msg);
 }
 
+// Lightweight toast notifications. Multiple toasts stack; each auto-dismisses.
+function showToast(message, variant = 'info', durationMs = 3200) {
+  const container = $('#toast-container');
+  if (!container) return;
+  const toast = document.createElement('div');
+  toast.className = 'toast ' + (variant || 'info');
+  toast.textContent = message;
+  container.appendChild(toast);
+  // Force reflow so the transition from hidden → visible animates.
+  void toast.offsetWidth;
+  toast.classList.add('visible');
+  setTimeout(() => {
+    toast.classList.remove('visible');
+    setTimeout(() => toast.remove(), 220);
+  }, durationMs);
+}
+
 // Tab switching
 $$('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
@@ -802,7 +819,7 @@ async function loadHistory() {
         <input type="checkbox" class="session-check" data-id="${s.id}">
         <div class="session-info">
           <div class="session-title ${title ? '' : 'untitled'}" data-id="${s.id}">${title || 'Untitled session'}</div>
-          <div class="url">${escHtml(s.url)}</div>
+          <div class="url" title="${escHtml(s.url)}">${escHtml(s.url)}</div>
           <div class="meta">${start} · ${dur} · ${s.eventCount} events${isActive ? ' · <strong>viewing</strong>' : ''}</div>
         </div>
       </div>
